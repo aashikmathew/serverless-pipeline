@@ -115,14 +115,56 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .format-note {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        .error-code {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .error-message {
+            margin-bottom: 10px;
+        }
+        .error-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Data Validator</h1>
+        <div class="format-note">
+            <strong>Note:</strong> The validator expects data in the following format:
+            <pre>{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "age": 30
+}</pre>
+            <p>Validation rules:</p>
+            <ul>
+                <li>Name must be a non-empty string</li>
+                <li>Email must be a valid email address</li>
+                <li>Age must be a positive integer</li>
+            </ul>
+        </div>
         <div class="form-group">
             <label for="data">Enter JSON data to validate:</label>
-            <textarea id="data" placeholder="Enter JSON data here..."></textarea>
+            <textarea id="data" placeholder='{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "age": 30
+}'></textarea>
         </div>
         <div class="button-group">
             <button onclick="validateData()" class="primary-button" id="validate-button">
@@ -204,26 +246,45 @@
                 resultDiv.className = 'loading';
                 resultDiv.textContent = 'Validating data...';
                 
-                const jsonData = JSON.parse(editor.getValue());
+                // Get the raw JSON string from the editor
+                const jsonString = editor.getValue().trim();
+                
+                // Validate JSON format before sending
+                try {
+                    JSON.parse(jsonString);
+                } catch (e) {
+                    throw new Error('Invalid JSON format. Please check your input.');
+                }
+                
+                // Send the raw JSON string to the backend
                 const response = await fetch('/api/validate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(jsonData)
+                    body: jsonString
                 });
                 
                 const result = await response.json();
-                if (response.ok) {
-                    resultDiv.className = 'success';
-                    resultDiv.textContent = 'Data validation successful!';
-                } else {
+                
+                if (result.error) {
                     resultDiv.className = 'error';
-                    resultDiv.textContent = `Validation error: ${result.error || 'Unknown error'}`;
+                    let errorHtml = '';
+                    if (result.code) {
+                        errorHtml += `<div class="error-code">Error Code: ${result.code}</div>`;
+                    }
+                    errorHtml += `<div class="error-message">${result.message || result.error}</div>`;
+                    if (result.missing_fields) {
+                        errorHtml += `<div class="error-details">Missing fields: ${result.missing_fields.join(', ')}</div>`;
+                    }
+                    resultDiv.innerHTML = errorHtml;
+                } else {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `<div class="error-message">${result.message || 'Data validated successfully'}</div>`;
                 }
             } catch (error) {
                 resultDiv.className = 'error';
-                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
             } finally {
                 // Reset button state
                 validateButton.disabled = false;

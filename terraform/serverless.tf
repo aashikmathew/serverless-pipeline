@@ -75,7 +75,7 @@ resource "google_cloudfunctions_function_iam_member" "invoker" {
   member = "serviceAccount:${var.service_account_email}"
 }
 
-# Cloud Run Service for frontend
+# Cloud Run Service
 resource "google_cloud_run_service" "frontend" {
   name     = var.cloud_run_service_name
   location = var.region
@@ -83,15 +83,10 @@ resource "google_cloud_run_service" "frontend" {
   template {
     spec {
       containers {
-        image = "gcr.io/cloudrun/hello"  # Using a public hello world image
-        
-        resources {
-          limits = {
-            cpu    = "1000m"
-            memory = "512Mi"
-          }
+        image = "gcr.io/${var.project_id}/${var.cloud_run_service_name}:latest"
+        ports {
+          container_port = 8080
         }
-
         env {
           name  = "PROJECT_ID"
           value = var.project_id
@@ -106,10 +101,44 @@ resource "google_cloud_run_service" "frontend" {
   }
 }
 
-# IAM policy for Cloud Run
-resource "google_cloud_run_service_iam_member" "public" {
+# IAM policy to allow unauthenticated access to Cloud Run service
+resource "google_cloud_run_service_iam_member" "public_access" {
   service  = google_cloud_run_service.frontend.name
   location = google_cloud_run_service.frontend.location
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+# Cloud Build trigger for frontend service
+resource "google_cloudbuild_trigger" "frontend" {
+  name        = "${var.cloud_run_service_name}-trigger"
+  description = "Build and deploy frontend service"
+  project     = var.project_id
+
+  github {
+    owner = var.github_owner
+    name  = var.github_repo
+    push {
+      branch = "^main$"
+    }
+  }
+
+  included_files = ["src/frontend/**"]
+
+  build {
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = ["build", "-t", "gcr.io/${var.project_id}/${var.cloud_run_service_name}:$COMMIT_SHA", "./src/frontend"]
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = ["push", "gcr.io/${var.project_id}/${var.cloud_run_service_name}:$COMMIT_SHA"]
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = ["run", "deploy", var.cloud_run_service_name, "--image", "gcr.io/${var.project_id}/${var.cloud_run_service_name}:$COMMIT_SHA", "--region", var.region, "--platform", "managed", "--allow-unauthenticated"]
+    }
+  }
 } 
