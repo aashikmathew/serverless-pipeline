@@ -1,145 +1,241 @@
-# Serverless Data Processing Pipeline on GCP
+# 🚀 Serverless Data Processing Pipeline on GCP
 
-A modern serverless architecture built on Google Cloud Platform (GCP) using Terraform for Infrastructure as Code (IaC). The pipeline processes data in real-time and provides analytics capabilities.
+A modern, event-driven serverless architecture built on Google Cloud Platform (GCP) that processes and validates data in real-time. The pipeline uses Cloud Functions for data validation, Pub/Sub for message streaming, and provides a clean web interface for data submission.
 
-## 🚀 Features
+## 📊 Architecture Overview
 
-- **Real-time Data Processing**
-  - Cloud Run for serverless container execution
-  - Cloud Functions for event processing
-  - Pub/Sub for event streaming
-  - Firestore for NoSQL data storage
-  - BigQuery for analytics
-  - Cloud Storage for static assets
+```ascii
+┌──────────────┐     ┌───────────────┐     ┌───────────────┐
+│   Frontend   │────▶│ Data Validator│────▶│   Pub/Sub     │
+│  (Cloud Run) │     │(Cloud Function)│     │(events-topic) │
+└──────────────┘     └───────────────┘     └───────────┬───┘
+                            │                           │
+                            │                           ▼
+┌──────────────┐     ┌─────┴───────┐           ┌──────────────┐
+│  Monitoring  │◀────│   Logging   │           │  Subscriber  │
+│  Dashboard   │     │    Sink     │           │  Services    │
+└──────────────┘     └───────────┬─┘           └──────────────┘
+                                 │
+                                ▼
+                         ┌──────────────┐
+                         │   BigQuery   │
+                         │  Analytics   │
+                         └──────────────┘
+```
 
-- **Error Handling & Reliability**
-  - Dead Letter Queue (DLQ) for failed messages
-  - Retry mechanism with exponential backoff
-  - Error tracking and monitoring
-  - Automatic error recovery
+## 🎯 Key Features
 
-- **Monitoring & Observability**
-  - Cloud Monitoring dashboards
-  - Log exports to BigQuery
-  - Alerting policies for error rates
-  - Performance metrics tracking
+### 1. Frontend Service (Cloud Run)
+- Modern web interface for data submission
+- Built with Flask and Bootstrap
+- Containerized with Docker
+- Automatic scaling based on load
+- HTTPS endpoint with custom domain support
+
+### 2. Data Validation (Cloud Function)
+- Real-time data validation
+- JSON schema validation
+- Email format verification
+- Age validation
+- Comprehensive error handling
+- Returns detailed validation feedback
+
+### 3. Event Streaming (Pub/Sub)
+- Asynchronous message processing
+- Guaranteed message delivery
+- Dead Letter Queue (DLQ) for failed messages
+- Topic/Subscription based architecture
+- Real-time event propagation
+
+### 4. Monitoring & Analytics
+- Real-time monitoring dashboard
+- Function execution metrics
+- Message flow visualization
+- Error rate tracking
+- Performance analytics
+- Log-based metrics
 
 ## 🛠️ Tech Stack
 
-- **Infrastructure**
-  - Terraform for IaC
-  - Google Cloud Platform
-  - Cloud Run
-  - Cloud Functions
-  - Pub/Sub
-  - Firestore
-  - BigQuery
-  - Cloud Storage
+### Infrastructure
+- **Google Cloud Platform**
+  - Cloud Run (Frontend hosting)
+  - Cloud Functions (Serverless compute)
+  - Cloud Pub/Sub (Event streaming)
+  - Cloud Monitoring (Observability)
+  - Cloud Logging (Audit & debugging)
+  - BigQuery (Analytics)
 
-- **Development**
+### Development
+- **Frontend**
   - Python 3.9
-  - Cloud Functions Framework
-  - Pub/Sub Client Library
-  - Flask
+  - Flask web framework
+  - Bootstrap 5
+  - Gunicorn server
+  - Docker
 
-## 📋 Project Structure
+- **Backend**
+  - Python Cloud Functions
+  - functions-framework
+  - google-cloud-pubsub
+  - JSON schema validation
+
+### DevOps
+- Terraform (Infrastructure as Code)
+- GitHub (Version Control)
+- Cloud Build (CI/CD)
+
+## 📁 Project Structure
 
 ```
 serverless-pipeline/
 ├── src/
+│   ├── frontend/
+│   │   ├── Dockerfile           # Container configuration
+│   │   ├── app.py              # Flask application
+│   │   ├── requirements.txt    # Python dependencies
+│   │   └── templates/
+│   │       └── index.html      # Web interface
+│   │
 │   └── functions/
 │       └── data_validator/
-│           ├── main.py           # Cloud Function code
-│           └── requirements.txt  # Dependencies
-├── terraform/                    # Infrastructure code
+│           ├── main.py         # Validation logic
+│           └── requirements.txt # Function dependencies
+│
+├── terraform/
+│   ├── main.tf                 # Main infrastructure
+│   ├── variables.tf            # Variable definitions
+│   └── serverless.tf          # Serverless resources
+│
 └── README.md
 ```
 
 ## 🔧 Setup & Deployment
 
-1. **Prerequisites**
-   - Google Cloud Project
-   - Terraform installed
-   - gcloud CLI configured
-
-2. **Infrastructure Setup**
+### Prerequisites
+1. **Google Cloud Setup**
    ```bash
+   # Install Google Cloud SDK
+   brew install google-cloud-sdk  # macOS
+   
+   # Initialize and set project
+   gcloud init
+   gcloud config set project servless-pipeline
+   ```
+
+2. **Terraform Setup**
+   ```bash
+   # Install Terraform
+   brew install terraform  # macOS
+   
+   # Initialize Terraform
    cd terraform
    terraform init
-   terraform plan
-   terraform apply
+   ```
+
+### Deployment Steps
+
+1. **Infrastructure Deployment**
+   ```bash
+   # Deploy GCP resources
+   cd terraform
+   terraform plan    # Review changes
+   terraform apply   # Deploy infrastructure
+   ```
+
+2. **Frontend Deployment**
+   ```bash
+   # Build and deploy frontend
+   cd src/frontend
+   docker build -t gcr.io/servless-pipeline/frontend-service:latest .
+   docker push gcr.io/servless-pipeline/frontend-service:latest
+   gcloud run deploy frontend-service --image gcr.io/servless-pipeline/frontend-service:latest
    ```
 
 3. **Function Deployment**
    ```bash
-   ./deploy_function.sh
+   # Deploy validator function
+   cd src/functions/data_validator
+   gcloud functions deploy data-validator \
+     --runtime python39 \
+     --trigger-http \
+     --allow-unauthenticated
    ```
 
-4. **Testing**
-   ```bash
-   # Test with valid payload
-   curl -X POST "https://us-central1-servless-pipeline.cloudfunctions.net/data-validator" \
-     -H "Content-Type: application/json" \
-     -d '{"event_type": "test", "data": "test data"}'
+## 🧪 Testing
 
-   # Test with invalid payload
-   curl -X POST "https://us-central1-servless-pipeline.cloudfunctions.net/data-validator" \
-     -H "Content-Type: application/json" \
-     -d '{"event_type": "test"}'
-   ```
+### Frontend Testing
+```bash
+# Access the frontend URL
+open $(gcloud run services describe frontend-service --format='value(status.url)')
+```
 
-## 🔍 Monitoring
+### Function Testing
+```bash
+# Test with valid data
+curl -X POST "$(gcloud functions describe data-validator --format='value(httpsTrigger.url)')" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Doe", "email": "john@example.com", "age": 30}'
 
-- **Dashboards**
-  - Function invocations
-  - Execution times
-  - Error rates
-  - Pub/Sub message counts
+# Test with invalid data
+curl -X POST "$(gcloud functions describe data-validator --format='value(httpsTrigger.url)')" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Doe", "email": "invalid-email", "age": -1}'
+```
 
-- **Logs**
-  - Export to BigQuery
-  - Error tracking
-  - Performance metrics
+## 📊 Monitoring
 
-- **Alerts**
-  - High error rates
-  - Failed messages
-  - Performance issues
+### Dashboard Access
+1. Open GCP Console
+2. Navigate to Monitoring → Dashboards
+3. Select "Data Processing Pipeline"
 
-## 🔒 Error Handling
+### Key Metrics
+- Function Execution Count
+- Average Response Time
+- Error Rate
+- Message Publication Rate
+- Message Processing Rate
 
-- **Dead Letter Queue**
-  - Failed messages are sent to DLQ
-  - Retry count tracking
-  - Error details included
+### Alerts
+- High Error Rate Alert (>5%)
+- Function Timeout Alert
+- Message Processing Delay Alert
 
-- **Retry Mechanism**
-  - Up to 3 retry attempts
-  - Exponential backoff
-  - Automatic recovery
+## 🔍 Troubleshooting
 
-## 📈 Next Steps
+### Common Issues
+1. **Function Returns 500**
+   - Check function logs
+   - Verify PROJECT_ID environment variable
+   - Validate input data format
 
-1. **Additional Features**
-   - Data transformation
-   - Authentication
-   - Rate limiting
-   - Caching
+2. **Message Publishing Fails**
+   - Check Pub/Sub permissions
+   - Verify topic existence
+   - Check quota limits
 
-2. **CI/CD Pipeline**
-   - Automated testing
-   - Deployment automation
-   - Version control
-
-3. **Documentation**
-   - API documentation
-   - Deployment guides
-   - Troubleshooting guides
+3. **Frontend Unavailable**
+   - Check Cloud Run logs
+   - Verify container health
+   - Check resource allocation
 
 ## 🤝 Contributing
 
-Feel free to submit issues and enhancement requests!
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## 📞 Support
+
+For support, please:
+1. Check the documentation
+2. Review troubleshooting guide
+3. Open an issue on GitHub
+4. Contact the maintainers 
