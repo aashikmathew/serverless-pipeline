@@ -1,8 +1,0 @@
-project_id = "servless-pipeline"
-region = "us-central1"
-environment = "dev"
-service_account_email = "terraform@servless-pipeline.iam.gserviceaccount.com"
-firestore_location = "us-central"
-bigquery_dataset_name = "analytics"
-cloud_function_runtime = "python39"
-cloud_run_service_name = "frontend-service"

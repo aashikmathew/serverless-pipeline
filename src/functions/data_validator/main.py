@@ -8,13 +8,7 @@ topic_path = None
 
 @functions_framework.http
 def validate_data(request):
-    """HTTP Cloud Function that validates incoming data and publishes to Pub/Sub.
-    Args:
-        request (flask.Request): The request object.
-    Returns:
-        The response text, or any set of values that can be turned into a
-        Response object using `make_response`.
-    """
+    """HTTP Cloud Function that validates incoming data and publishes to Pub/Sub."""
     global topic_path
     if topic_path is None:
         project_id = request.environ.get('PROJECT_ID')
@@ -48,4 +42,4 @@ def validate_data(request):
         future.result()  # Wait for the publish to complete
         return ('Event published successfully', 200)
     except Exception as e:
-        return (f'Error publishing event: {str(e)}', 500) 
+        return (f'Error publishing event: {str(e)}', 500)

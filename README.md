@@ -1,92 +1,145 @@
-# Serverless Data Processing Pipeline
+# Serverless Data Processing Pipeline on GCP
 
-This project demonstrates a modern serverless architecture on Google Cloud Platform (GCP) using Terraform for infrastructure as code. The pipeline processes data in real-time and provides analytics capabilities.
+A modern serverless architecture built on Google Cloud Platform (GCP) using Terraform for Infrastructure as Code (IaC). The pipeline processes data in real-time and provides analytics capabilities.
 
-## Architecture Overview
+## 🚀 Features
 
-The application consists of the following components:
+- **Real-time Data Processing**
+  - Cloud Run for serverless container execution
+  - Cloud Functions for event processing
+  - Pub/Sub for event streaming
+  - Firestore for NoSQL data storage
+  - BigQuery for analytics
+  - Cloud Storage for static assets
 
-1. **Frontend Layer**
-   - Cloud Run service for the web application
-   - Cloud Storage for static assets
-   - Cloud CDN for content delivery
+- **Error Handling & Reliability**
+  - Dead Letter Queue (DLQ) for failed messages
+  - Retry mechanism with exponential backoff
+  - Error tracking and monitoring
+  - Automatic error recovery
 
-2. **Data Ingestion Layer**
-   - Cloud Pub/Sub for event streaming
-   - Cloud Functions for data validation
+- **Monitoring & Observability**
+  - Cloud Monitoring dashboards
+  - Log exports to BigQuery
+  - Alerting policies for error rates
+  - Performance metrics tracking
 
-3. **Processing Layer**
-   - Cloud Functions for lightweight processing
-   - Cloud Run for complex processing
-   - Cloud Dataflow for batch processing
+## 🛠️ Tech Stack
 
-4. **Storage Layer**
-   - Firestore for NoSQL data
-   - BigQuery for analytics
-   - Cloud Storage for raw data
+- **Infrastructure**
+  - Terraform for IaC
+  - Google Cloud Platform
+  - Cloud Run
+  - Cloud Functions
+  - Pub/Sub
+  - Firestore
+  - BigQuery
+  - Cloud Storage
 
-5. **Monitoring and Operations**
-   - Cloud Monitoring
-   - Cloud Logging
-   - Error Reporting
+- **Development**
+  - Python 3.9
+  - Cloud Functions Framework
+  - Pub/Sub Client Library
+  - Flask
 
-## Prerequisites
+## 📋 Project Structure
 
-- Google Cloud Platform account with billing enabled
-- Terraform installed (version >= 1.0.0)
-- Google Cloud SDK installed
-- Python 3.9+ (for Cloud Functions)
+```
+serverless-pipeline/
+├── src/
+│   └── functions/
+│       └── data_validator/
+│           ├── main.py           # Cloud Function code
+│           └── requirements.txt  # Dependencies
+├── terraform/                    # Infrastructure code
+└── README.md
+```
 
-## Setup Instructions
+## 🔧 Setup & Deployment
 
-1. Clone this repository
-2. Initialize Terraform:
+1. **Prerequisites**
+   - Google Cloud Project
+   - Terraform installed
+   - gcloud CLI configured
+
+2. **Infrastructure Setup**
    ```bash
    cd terraform
    terraform init
-   ```
-
-3. Create a `terraform.tfvars` file with your configuration:
-   ```hcl
-   project_id = "your-project-id"
-   region     = "us-central1"
-   ```
-
-4. Apply the Terraform configuration:
-   ```bash
    terraform plan
    terraform apply
    ```
 
-## Project Structure
+3. **Function Deployment**
+   ```bash
+   ./deploy_function.sh
+   ```
 
-```
-serverless-pipeline/
-├── terraform/           # Terraform configuration files
-├── src/
-│   ├── frontend/       # Frontend application code
-│   ├── functions/      # Cloud Functions code
-│   └── dataflow/       # Dataflow pipeline code
-└── docs/              # Documentation
-```
+4. **Testing**
+   ```bash
+   # Test with valid payload
+   curl -X POST "https://us-central1-servless-pipeline.cloudfunctions.net/data-validator" \
+     -H "Content-Type: application/json" \
+     -d '{"event_type": "test", "data": "test data"}'
 
-## Features
+   # Test with invalid payload
+   curl -X POST "https://us-central1-servless-pipeline.cloudfunctions.net/data-validator" \
+     -H "Content-Type: application/json" \
+     -d '{"event_type": "test"}'
+   ```
 
-- Real-time data processing
-- Scalable serverless architecture
-- Infrastructure as Code
-- Monitoring and logging
-- Cost optimization
-- Security best practices
+## 🔍 Monitoring
 
-## Contributing
+- **Dashboards**
+  - Function invocations
+  - Execution times
+  - Error rates
+  - Pub/Sub message counts
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+- **Logs**
+  - Export to BigQuery
+  - Error tracking
+  - Performance metrics
 
-## License
+- **Alerts**
+  - High error rates
+  - Failed messages
+  - Performance issues
+
+## 🔒 Error Handling
+
+- **Dead Letter Queue**
+  - Failed messages are sent to DLQ
+  - Retry count tracking
+  - Error details included
+
+- **Retry Mechanism**
+  - Up to 3 retry attempts
+  - Exponential backoff
+  - Automatic recovery
+
+## 📈 Next Steps
+
+1. **Additional Features**
+   - Data transformation
+   - Authentication
+   - Rate limiting
+   - Caching
+
+2. **CI/CD Pipeline**
+   - Automated testing
+   - Deployment automation
+   - Version control
+
+3. **Documentation**
+   - API documentation
+   - Deployment guides
+   - Troubleshooting guides
+
+## 🤝 Contributing
+
+Feel free to submit issues and enhancement requests!
+
+## 📄 License
 
 This project is licensed under the MIT License. 
