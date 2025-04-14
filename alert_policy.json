@@ -1,6 +1,5 @@
-
 {
-  "displayName": "High Error Rate Alert",
+  "displayName": "Serverless Pipeline Alerts",
   "conditions": [
     {
       "displayName": "Error rate exceeds threshold",
@@ -16,8 +15,41 @@
         "thresholdValue": 0.1,
         "duration": "300s"
       }
+    },
+    {
+      "displayName": "High Pub/Sub Message Backlog",
+      "conditionThreshold": {
+        "filter": "resource.type = \"pubsub_subscription\" AND resource.labels.subscription_id = \"events-subscription\" AND metric.type = \"pubsub.googleapis.com/subscription/num_undelivered_messages\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_MAX"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 1000,
+        "duration": "300s"
+      }
+    },
+    {
+      "displayName": "High DLQ Message Count",
+      "conditionThreshold": {
+        "filter": "resource.type = \"pubsub_subscription\" AND resource.labels.subscription_id = \"events-subscription-dlq\" AND metric.type = \"pubsub.googleapis.com/subscription/num_undelivered_messages\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_MAX"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 100,
+        "duration": "300s"
+      }
     }
   ],
   "combiner": "OR",
-  "enabled": true
+  "enabled": true,
+  "notificationChannels": [
+    "projects/servless-pipeline/notificationChannels/11927938422948651002"
+  ]
 }
