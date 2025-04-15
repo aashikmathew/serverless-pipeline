@@ -6,7 +6,36 @@ resource "google_pubsub_topic" "events" {
   }
 }
 
-# Pub/Sub Subscription
+# DLQ Topic for failed messages
+resource "google_pubsub_topic" "events_dlq" {
+  name    = "events-topic-dlq"
+  labels = {
+    env = var.environment
+    type = "dlq"
+  }
+}
+
+# DLQ Subscription
+resource "google_pubsub_subscription" "events_dlq_subscription" {
+  name    = "events-subscription-dlq"
+  topic   = google_pubsub_topic.events_dlq.name
+  
+  expiration_policy {
+    ttl = "7d"
+  }
+  
+  retry_policy {
+    minimum_backoff = "10s"
+    maximum_backoff = "600s"
+  }
+  
+  dead_letter_policy {
+    dead_letter_topic     = google_pubsub_topic.events_dlq.id
+    max_delivery_attempts = 5
+  }
+}
+
+# Main Pub/Sub Subscription with DLQ configuration
 resource "google_pubsub_subscription" "events_subscription" {
   name    = "events-subscription"
   topic   = google_pubsub_topic.events.name
@@ -14,11 +43,33 @@ resource "google_pubsub_subscription" "events_subscription" {
 
   push_config {
     push_endpoint = google_cloud_run_service.event_processor.status[0].url
-
     attributes = {
       x-goog-version = "v1"
     }
   }
+
+  retry_policy {
+    minimum_backoff = "10s"
+    maximum_backoff = "600s"
+  }
+
+  dead_letter_policy {
+    dead_letter_topic     = google_pubsub_topic.events_dlq.id
+    max_delivery_attempts = 5
+  }
+}
+
+# IAM for DLQ Topic
+resource "google_pubsub_topic_iam_member" "dlq_publisher" {
+  topic  = google_pubsub_topic.events_dlq.name
+  role   = "roles/pubsub.publisher"
+  member = "serviceAccount:${var.service_account_email}"
+}
+
+resource "google_pubsub_topic_iam_member" "dlq_subscriber" {
+  topic  = google_pubsub_topic.events_dlq.name
+  role   = "roles/pubsub.subscriber"
+  member = "serviceAccount:${var.service_account_email}"
 }
 
 # Cloud Run Service for event processing
