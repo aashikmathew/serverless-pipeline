@@ -42,4 +42,37 @@ variable "cloud_run_service_name" {
   description = "Name of the Cloud Run service"
   type        = string
   default     = "frontend-service"
+}
+
+variable "alert_email_address" {
+  description = "Email address to receive monitoring alerts"
+  type        = string
+}
+
+variable "storage_location" {
+  description = "Location for storage buckets"
+  type        = string
+  default     = "US"
+}
+
+variable "storage_class" {
+  description = "Storage class for buckets"
+  type        = string
+  default     = "STANDARD"
+}
+
+variable "github_owner" {
+  description = "GitHub repository owner"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name"
+  type        = string
+}
+
+variable "github_branch" {
+  description = "GitHub branch to trigger builds from"
+  type        = string
+  default     = "main"
 } 

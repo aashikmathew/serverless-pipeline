@@ -4,293 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Validator</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .CodeMirror {
-            height: 300px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .button-group {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .primary-button {
-            background-color: #3498db;
-            color: white;
-        }
-        .secondary-button {
-            background-color: #95a5a6;
-            color: white;
-        }
-        .primary-button:hover {
-            background-color: #2980b9;
-        }
-        .secondary-button:hover {
-            background-color: #7f8c8d;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            display: none;
-        }
-        .success {
-            background-color: #dff0d8;
-            border: 1px solid #d6e9c6;
-            color: #3c763d;
-            display: block !important;
-        }
-        .error {
-            background-color: #f2dede;
-            border: 1px solid #ebccd1;
-            color: #a94442;
-            display: block !important;
-        }
-        .loading {
-            display: block !important;
-            background-color: #e9f7fe;
-            border: 1px solid #b6e3fc;
-            color: #3498db;
-        }
-        .examples {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
-        .example-button {
-            background-color: #eee;
-            color: #333;
-            padding: 5px 10px;
-            margin: 0 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .example-button:hover {
-            background-color: #ddd;
-        }
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .format-note {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-        }
-        .error-code {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .error-message {
-            margin-bottom: 10px;
-        }
-        .error-details {
-            font-size: 0.9em;
-            color: #666;
-        }
-        pre {
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>Data Validator</h1>
-        <div class="format-note">
-            <strong>Note:</strong> The validator expects data in the following format:
-            <pre>{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "age": 30
-}</pre>
-            <p>Validation rules:</p>
-            <ul>
-                <li>Name must be a non-empty string</li>
-                <li>Email must be a valid email address</li>
-                <li>Age must be a positive integer</li>
-            </ul>
+        <div class="header">
+            <h1>Data Validator</h1>
+            <p class="text-muted">Enter your information for validation</p>
         </div>
-        <div class="form-group">
-            <label for="data">Enter JSON data to validate:</label>
-            <textarea id="data" placeholder='{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "age": 30
-}'></textarea>
+
+        <form id="validationForm" onsubmit="return validateData(event)">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name" required
+                       pattern="[A-Za-z\s]+" title="Please enter a valid name (letters and spaces only)">
+                <div class="invalid-feedback">Please enter a valid name.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+                <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" class="form-control" id="age" name="age" required
+                       min="0" max="150" step="1">
+                <div class="invalid-feedback">Please enter a valid age (0-150).</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Validate Data</button>
+        </form>
+
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Validating data...</p>
         </div>
-        <div class="button-group">
-            <button onclick="validateData()" class="primary-button" id="validate-button">
-                <span id="button-text">Validate</span>
-            </button>
-            <button onclick="clearEditor()" class="secondary-button">Clear</button>
-        </div>
-        <div id="result"></div>
-        <div class="examples">
-            <h3>Example Templates:</h3>
-            <button class="example-button" onclick="loadExample('simple')">Simple Example</button>
-            <button class="example-button" onclick="loadExample('nested')">Nested Example</button>
-            <button class="example-button" onclick="loadExample('array')">Array Example</button>
-        </div>
+
+        <div id="result" class="result"></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
     <script>
-        let editor;
-        
-        // Initialize CodeMirror
-        document.addEventListener('DOMContentLoaded', function() {
-            editor = CodeMirror.fromTextArea(document.getElementById('data'), {
-                mode: "application/json",
-                theme: "monokai",
-                lineNumbers: true,
-                matchBrackets: true,
-                autoCloseBrackets: true,
-                indentUnit: 4,
-                lineWrapping: true
-            });
-        });
-
-        const examples = {
-            simple: {
-                name: "John Doe",
-                age: 30,
-                email: "john@example.com"
-            },
-            nested: {
-                user: {
-                    name: "John Doe",
-                    address: {
-                        street: "123 Main St",
-                        city: "New York",
-                        country: "USA"
-                    }
-                },
-                status: "active"
-            },
-            array: {
-                users: [
-                    { id: 1, name: "John" },
-                    { id: 2, name: "Jane" }
-                ],
-                total: 2
-            }
-        };
-
-        function loadExample(type) {
-            editor.setValue(JSON.stringify(examples[type], null, 4));
-        }
-
-        function clearEditor() {
-            editor.setValue('');
-            document.getElementById('result').style.display = 'none';
-        }
-
-        async function validateData() {
-            const resultDiv = document.getElementById('result');
-            const buttonText = document.getElementById('button-text');
-            const validateButton = document.getElementById('validate-button');
+        async function validateData(event) {
+            event.preventDefault();
             
+            // Get form data
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const age = parseInt(document.getElementById('age').value);
+
+            // Show loading spinner
+            document.querySelector('.loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
             try {
-                // Show loading state
-                validateButton.disabled = true;
-                buttonText.innerHTML = '<span class="spinner"></span>Validating...';
-                resultDiv.className = 'loading';
-                resultDiv.textContent = 'Validating data...';
-                
-                // Get the raw JSON string from the editor
-                const jsonString = editor.getValue().trim();
-                
-                // Validate JSON format before sending
-                try {
-                    JSON.parse(jsonString);
-                } catch (e) {
-                    throw new Error('Invalid JSON format. Please check your input.');
-                }
-                
-                // Send the raw JSON string to the backend
                 const response = await fetch('/api/validate', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: jsonString
+                    body: JSON.stringify({ name, email, age })
                 });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
                 
-                const result = await response.json();
-                
-                if (result.error) {
-                    resultDiv.className = 'error';
-                    let errorHtml = '';
-                    if (result.code) {
-                        errorHtml += `<div class="error-code">Error Code: ${result.code}</div>`;
-                    }
-                    errorHtml += `<div class="error-message">${result.message || result.error}</div>`;
-                    if (result.missing_fields) {
-                        errorHtml += `<div class="error-details">Missing fields: ${result.missing_fields.join(', ')}</div>`;
-                    }
-                    resultDiv.innerHTML = errorHtml;
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = '<strong>Success!</strong> Data validated successfully.';
                 } else {
-                    resultDiv.className = 'success';
-                    resultDiv.innerHTML = `<div class="error-message">${result.message || 'Data validated successfully'}</div>`;
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>Error!</strong> ${data.error}`;
                 }
+                
+                resultDiv.style.display = 'block';
             } catch (error) {
-                resultDiv.className = 'error';
-                resultDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                const resultDiv = document.getElementById('result');
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<strong>Error!</strong> Failed to connect to the server.';
+                resultDiv.style.display = 'block';
             } finally {
-                // Reset button state
-                validateButton.disabled = false;
-                buttonText.textContent = 'Validate';
+                document.querySelector('.loading').style.display = 'none';
             }
+
+            return false;
         }
+
+        // Real-time validation
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        });
     </script>
 </body>
 </html> 

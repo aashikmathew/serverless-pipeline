@@ -238,4 +238,37 @@ For support, please:
 1. Check the documentation
 2. Review troubleshooting guide
 3. Open an issue on GitHub
-4. Contact the maintainers 
+4. Contact the maintainers
+
+## CI/CD Pipeline
+
+The project includes a comprehensive CI/CD pipeline using GitHub Actions that automates:
+
+1. **Testing**
+   - Runs Python unit tests
+   - Validates code quality
+   - Ensures all components are working correctly
+
+2. **Building**
+   - Builds Docker images for the frontend service
+   - Packages Cloud Functions
+   - Validates Terraform configurations
+
+3. **Deployment**
+   - Automatically deploys to GCP on merge to main
+   - Updates Cloud Run services
+   - Deploys Cloud Functions
+   - Applies Terraform changes
+
+### Pipeline Steps
+1. Code Push/PR to main branch triggers the pipeline
+2. Runs tests and validation
+3. Builds Docker images and pushes to GCR
+4. Deploys frontend to Cloud Run
+5. Updates Cloud Functions
+6. Applies Terraform changes
+
+### Required Secrets
+To use the CI/CD pipeline, set up the following GitHub secrets:
+- `GCP_SA_KEY`: Service account key with necessary permissions
+- `PROJECT_ID`: Your GCP project ID 
