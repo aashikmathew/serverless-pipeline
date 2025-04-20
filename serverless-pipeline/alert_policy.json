@@ -1,0 +1,55 @@
+{
+  "displayName": "Serverless Pipeline Alerts",
+  "conditions": [
+    {
+      "displayName": "Error rate exceeds threshold",
+      "conditionThreshold": {
+        "filter": "metric.type=\"cloudfunctions.googleapis.com/function/execution_count\" resource.type=\"cloud_function\" metric.label.\"status\"=\"error\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_RATE"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 0.1,
+        "duration": "300s"
+      }
+    },
+    {
+      "displayName": "High Pub/Sub Message Backlog",
+      "conditionThreshold": {
+        "filter": "resource.type = \"pubsub_subscription\" AND resource.labels.subscription_id = \"events-subscription\" AND metric.type = \"pubsub.googleapis.com/subscription/num_undelivered_messages\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_MAX"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 1000,
+        "duration": "300s"
+      }
+    },
+    {
+      "displayName": "High DLQ Message Count",
+      "conditionThreshold": {
+        "filter": "resource.type = \"pubsub_subscription\" AND resource.labels.subscription_id = \"events-subscription-dlq\" AND metric.type = \"pubsub.googleapis.com/subscription/num_undelivered_messages\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_MAX"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 100,
+        "duration": "300s"
+      }
+    }
+  ],
+  "combiner": "OR",
+  "enabled": true,
+  "notificationChannels": [
+    "projects/servless-pipeline/notificationChannels/11927938422948651002"
+  ]
+}
