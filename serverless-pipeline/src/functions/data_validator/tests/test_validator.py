@@ -5,9 +5,7 @@ import os
 import sys
 import time
 
-# Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Import from the correct path
 from main import validate_data, rate_limit, validate_field, transform_data
 
 @pytest.fixture

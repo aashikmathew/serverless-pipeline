@@ -1,16 +1,17 @@
-import pytest
 import os
-from unittest.mock import Mock, patch
 import sys
+import pytest
+from unittest.mock import Mock, patch
 
-# Add the parent directory to the Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the necessary directories to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+sys.path.insert(0, os.path.dirname(parent_dir))
 
-# Set test environment variable
-os.environ['PYTEST_CURRENT_TEST'] = 'True'
-
-# Set environment variables for testing
-os.environ['GCP_PROJECT'] = 'servless-pipeline' 
+# Set test environment variables
+os.environ['GCP_PROJECT'] = 'servless-pipeline'
+os.environ['PYTEST_CURRENT_TEST'] = '1'
 
 @pytest.fixture(autouse=True)
 def setup_test_env():
@@ -22,33 +23,29 @@ def setup_test_env():
 
 @pytest.fixture
 def mock_request():
-    """Create a mock request object with common attributes."""
-    mock = Mock()
-    mock.headers = {
-        'X-Forwarded-For': '127.0.0.1',
-        'User-Agent': 'test-agent'
-    }
-    mock.environ = {"PROJECT_ID": "test-project"}
-    mock.remote_addr = '127.0.0.1'
-    return mock
+    """Create a mock request object."""
+    request = Mock()
+    request.method = 'POST'
+    request.headers = {}
+    request.remote_addr = '127.0.0.1'
+    request.get_json.return_value = {}
+    return request
 
 @pytest.fixture
 def mock_publisher():
-    """Create a mock publisher client."""
-    with patch('main.publisher') as mock:
-        mock_future = Mock()
-        mock_future.result.return_value = 'message-id'
-        mock.publish.return_value = mock_future
-        mock.topic_path.return_value = 'test-topic'
-        yield mock
+    """Create a mock publisher object."""
+    with patch('google.cloud.pubsub_v1.PublisherClient') as mock:
+        mock.return_value.topic_path.return_value = "projects/servless-pipeline/topics/events-topic"
+        mock.return_value.publish.return_value.result.return_value = "test-event-id"
+        yield mock.return_value
 
 @pytest.fixture
 def valid_data():
-    """Return a valid test data dictionary."""
+    """Create valid test data."""
     return {
         'event_type': 'test_event',
         'data': {'key': 'value'},
         'email': 'test@example.com',
         'phone': '+1234567890',
-        'timestamp': '2024-02-14 12:00:00'
+        'timestamp': '2024-02-14T12:00:00'
     } 

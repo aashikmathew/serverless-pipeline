@@ -26,6 +26,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential python3-dev
         
+    - name: Clean up vendored packages
+      run: |
+        rm -rf src/functions/data_validator/google
+        rm -rf src/functions/data_validator/grpc
+        rm -rf src/functions/data_validator/opentelemetry
+        
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
@@ -39,4 +45,4 @@ jobs:
     - name: Run tests
       run: |
         cd src/functions/data_validator
-        PYTHONPATH=$PYTHONPATH:$(pwd) python -m pytest tests/ -v 
+        PYTHONPATH=$PYTHONPATH:$(pwd)/.. python -m pytest tests/ -v 
