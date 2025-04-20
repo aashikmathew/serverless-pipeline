@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import json
-from src.functions.data_validator.main import validate_data, rate_limit, validate_field, transform_data
-import time
+from main import validate_data, rate_limit, validate_field, transform_data
 
 @pytest.fixture
 def mock_request():
@@ -18,7 +17,7 @@ def mock_request():
 @pytest.fixture
 def mock_publisher():
     """Create a mock publisher client."""
-    with patch('src.functions.data_validator.main.publisher') as mock:
+    with patch('main.publisher') as mock:
         mock.topic_path.return_value = "projects/servless-pipeline/topics/events-topic"
         yield mock
 
@@ -32,24 +31,17 @@ def valid_data():
         'timestamp': '2024-02-14T12:00:00Z'
     }
 
-def test_valid_request(mock_request, valid_data):
+def test_valid_request(mock_request, mock_publisher, valid_data):
     mock_request.get_json.return_value = valid_data
+    response, status_code = validate_data(mock_request)
     
-    with patch('src.functions.data_validator.main.publisher.publish') as mock_publish:
-        mock_future = MagicMock()
-        mock_publish.return_value = mock_future
-        mock_future.result.return_value = 'message-id'
-        
-        response, status_code = validate_data(mock_request)
-        
-        assert status_code == 200
-        assert 'message' in response
-        assert 'event_id' in response
-        mock_publish.assert_called_once()
+    assert status_code == 200
+    assert 'message' in response
+    assert 'event_id' in response
+    mock_publisher.publish.assert_called_once()
 
 def test_missing_required_fields(mock_request):
     mock_request.get_json.return_value = {'data': {'key': 'value'}}
-    
     response, status_code = validate_data(mock_request)
     
     assert status_code == 400
@@ -86,7 +78,7 @@ def test_invalid_timestamp_format(mock_request, valid_data):
     assert 'errors' in response
     assert any('timestamp' in error for error in response['errors'])
 
-def test_rate_limiting(mock_request, valid_data):
+def test_rate_limiting(mock_request, valid_data, mock_publisher):
     mock_request.get_json.return_value = valid_data
     
     # Make requests up to the limit
@@ -97,26 +89,22 @@ def test_rate_limiting(mock_request, valid_data):
     # Next request should be rate limited
     response, status_code = validate_data(mock_request)
     assert status_code == 429
-    assert 'Rate limit exceeded' in response
+    assert 'error' in response
+    assert 'Rate limit exceeded' in response['error']
 
-def test_data_transformation(mock_request, valid_data):
+def test_data_transformation(mock_request, valid_data, mock_publisher):
     valid_data['email'] = ' Test@Example.com '
     valid_data['phone'] = '+1 (234) 567-890'
     mock_request.get_json.return_value = valid_data
     
-    with patch('src.functions.data_validator.main.publisher.publish') as mock_publish:
-        mock_future = MagicMock()
-        mock_publish.return_value = mock_future
-        mock_future.result.return_value = 'message-id'
-        
-        response, status_code = validate_data(mock_request)
-        
-        assert status_code == 200
-        # Verify the transformed data was published
-        call_args = mock_publish.call_args[0]
-        published_data = json.loads(call_args[1].decode('utf-8'))
-        assert published_data['data']['email'] == 'test@example.com'
-        assert published_data['data']['phone'] == '1234567890'
+    response, status_code = validate_data(mock_request)
+    
+    assert status_code == 200
+    # Verify the transformed data was published
+    call_args = mock_publisher.publish.call_args[0]
+    published_data = json.loads(call_args[1].decode('utf-8'))
+    assert published_data['data']['email'] == 'test@example.com'
+    assert published_data['data']['phone'] == '1234567890'
 
 def test_validate_field():
     rules = {
@@ -150,28 +138,23 @@ def test_transform_data():
     assert transformed['phone'] == '1234567890'
     assert transformed['timestamp'].startswith('2024-02-14T12:00:00')
 
-def test_validate_data_invalid_json():
-    """Test the validate_data function with invalid JSON."""
-    # Setup
-    mock_request = Mock()
-    mock_request.get_json = Mock(return_value=None)
-    mock_request.environ = {"PROJECT_ID": "servless-pipeline"}
+def test_validate_data_invalid_json(mock_request):
+    mock_request.get_json.side_effect = Exception("Invalid JSON")
     
-    # Execute
-    response = validate_data(mock_request)
+    response, status_code = validate_data(mock_request)
     
-    # Assert
-    assert response[1] == 400
-    assert "Invalid request" in response[0]
+    assert status_code == 400
+    assert 'error' in response
+    assert 'Invalid request' in response['error']
 
-def test_publish_error(mock_request, mock_publisher):
-    """Test publishing error handling."""
-    # Setup
-    mock_publisher.publish.side_effect = Exception("Publish failed")
+def test_publish_error(mock_request, valid_data):
+    mock_request.get_json.return_value = valid_data
     
-    # Execute
-    response = validate_data(mock_request)
-    
-    # Assert
-    assert response[1] == 500  # Check status code
-    assert "Error publishing event" in response[0]  # Check error message 
+    with patch('main.publisher.publish') as mock_publish:
+        mock_publish.side_effect = Exception("Publish failed")
+        
+        response, status_code = validate_data(mock_request)
+        
+        assert status_code == 500
+        assert 'error' in response
+        assert 'Error publishing event' in response['error'] 
