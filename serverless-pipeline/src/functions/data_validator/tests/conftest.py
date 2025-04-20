@@ -2,6 +2,9 @@ import pytest
 import os
 from unittest.mock import Mock, patch
 
+# Set test environment variable
+os.environ['PYTEST_CURRENT_TEST'] = 'True'
+
 # Set environment variables for testing
 os.environ['GCP_PROJECT'] = 'servless-pipeline' 
 

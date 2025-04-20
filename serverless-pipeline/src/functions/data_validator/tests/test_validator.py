@@ -1,6 +1,12 @@
 import pytest
 from unittest.mock import Mock, patch
 import json
+import os
+import sys
+
+# Add the parent directory to Python path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from main import validate_data, rate_limit, validate_field, transform_data
 
 @pytest.fixture
