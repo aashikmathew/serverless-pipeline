@@ -1,12 +1,24 @@
 import pytest
 import os
 from unittest.mock import Mock, patch
+import sys
+
+# Add the parent directory to the Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Set test environment variable
 os.environ['PYTEST_CURRENT_TEST'] = 'True'
 
 # Set environment variables for testing
 os.environ['GCP_PROJECT'] = 'servless-pipeline' 
+
+@pytest.fixture(autouse=True)
+def setup_test_env():
+    """Setup test environment variables."""
+    os.environ["PYTEST_CURRENT_TEST"] = "1"
+    yield
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        del os.environ["PYTEST_CURRENT_TEST"]
 
 @pytest.fixture
 def mock_request():
