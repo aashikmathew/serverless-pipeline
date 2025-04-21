@@ -69,7 +69,7 @@ jobs:
 
     - name: Format with black
       run: |
-        black .
+        black serverless-pipeline/src/ serverless-pipeline/deploy/ --exclude="/(\.git|\.venv|venv|env|\.eggs|\.tox|node_modules)/"
 
     - name: Lint with flake8
       run: |
