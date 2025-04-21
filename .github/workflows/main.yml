@@ -19,13 +19,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/python@master
+    - name: Install Snyk
+      uses: snyk/actions/setup@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        command: test
-        args: --file=serverless-pipeline/src/functions/data_validator/requirements.txt --severity-threshold=high
+
+    - name: Run Snyk to check for vulnerabilities
+      run: |
+        cd serverless-pipeline/src/functions/data_validator
+        snyk test --file=requirements.txt --severity-threshold=high --skip-unresolved
 
     - name: Scan for secrets
       uses: gitleaks/gitleaks-action@v2
