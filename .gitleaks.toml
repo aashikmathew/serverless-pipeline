@@ -1,0 +1,20 @@
+[allowlist]
+paths = [
+    '''.*google/auth/.*''',
+    '''.*google/api_core/.*''',
+    '''.*google/protobuf/.*''',
+    '''.*pyasn1_modules/.*''',
+    '''.*rsa/.*''',
+    '''.*_python_rsa\.py''',
+    '''.*_mtls_helper\.py''',
+    '''.*page_iterator.*\.py''',
+    '''.*descriptor_pb2\.py''',
+]
+
+# Ignore standard library and package files
+regexes = [
+    '''example''',
+    '''test''',
+    '''sample''',
+    '''mock''',
+] 
