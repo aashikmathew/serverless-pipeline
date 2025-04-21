@@ -24,13 +24,10 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    - name: Authenticate with Snyk
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
     - name: Run Snyk to check for vulnerabilities
       run: |
         cd serverless-pipeline/src/functions/data_validator
-        snyk test --file=requirements.txt --severity-threshold=high --skip-unresolved
+        snyk test --file=requirements.txt --severity-threshold=high --skip-unresolved --token=${{ secrets.SNYK_TOKEN }}
 
     - name: Scan for secrets
       uses: gitleaks/gitleaks-action@v2
