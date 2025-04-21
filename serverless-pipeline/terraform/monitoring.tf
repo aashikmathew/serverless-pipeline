@@ -63,13 +63,15 @@ resource "google_monitoring_dashboard" "pipeline_dashboard" {
 resource "google_monitoring_alert_policy" "high_error_rate" {
   display_name = "High Error Rate Alert"
   combiner     = "OR"
+
   conditions {
     display_name = "Error Rate > 5%"
     condition_threshold {
-      filter     = "metric.type=\"run.googleapis.com/request_count\" resource.type=\"cloud_run_revision\" resource.label.\"service_name\"=\"${var.cloud_run_service_name}\" metric.label.\"response_code_class\"=\"5xx\""
-      duration   = "300s"
-      comparison = "COMPARISON_GT"
+      filter          = "metric.type=\"run.googleapis.com/request_count\" resource.type=\"cloud_run_revision\" resource.label.\"service_name\"=\"${var.cloud_run_service_name}\" metric.label.\"response_code_class\"=\"5xx\""
+      duration        = "300s"
+      comparison     = "COMPARISON_GT"
       threshold_value = 5.0
+
       aggregations {
         alignment_period   = "60s"
         per_series_aligner = "ALIGN_RATE"
@@ -84,13 +86,15 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
 resource "google_monitoring_alert_policy" "function_timeout" {
   display_name = "Function Timeout Alert"
   combiner     = "OR"
+
   conditions {
     display_name = "Function Timeout Rate"
     condition_threshold {
-      filter     = "metric.type=\"cloudfunctions.googleapis.com/function/execution_times\" resource.type=\"cloud_function\" resource.label.\"function_name\"=\"data-validator\""
-      duration   = "300s"
-      comparison = "COMPARISON_GT"
-      threshold_value = 30000  # 30 seconds
+      filter          = "metric.type=\"cloudfunctions.googleapis.com/function/execution_times\" resource.type=\"cloud_function\" resource.label.\"function_name\"=\"data-validator\""
+      duration        = "300s"
+      comparison     = "COMPARISON_GT"
+      threshold_value = 30000 # 30 seconds
+
       aggregations {
         alignment_period   = "60s"
         per_series_aligner = "ALIGN_PERCENTILE_99"
@@ -105,6 +109,7 @@ resource "google_monitoring_alert_policy" "function_timeout" {
 resource "google_monitoring_notification_channel" "email" {
   display_name = "Email Notification Channel"
   type         = "email"
+
   labels = {
     email_address = var.alert_email_address
   }
@@ -141,27 +146,27 @@ resource "google_bigquery_table" "processed_data" {
 
   schema = jsonencode([
     {
-      name = "timestamp",
-      type = "TIMESTAMP",
-      mode = "REQUIRED",
+      name        = "timestamp"
+      type        = "TIMESTAMP"
+      mode        = "REQUIRED"
       description = "Event timestamp"
     },
     {
-      name = "event_type",
-      type = "STRING",
-      mode = "REQUIRED",
+      name        = "event_type"
+      type        = "STRING"
+      mode        = "REQUIRED"
       description = "Type of event"
     },
     {
-      name = "data",
-      type = "JSON",
-      mode = "NULLABLE",
+      name        = "data"
+      type        = "JSON"
+      mode        = "NULLABLE"
       description = "Event data"
     },
     {
-      name = "status",
-      type = "STRING",
-      mode = "REQUIRED",
+      name        = "status"
+      type        = "STRING"
+      mode        = "REQUIRED"
       description = "Processing status"
     }
   ])
