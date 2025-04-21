@@ -271,4 +271,7 @@ The project includes a comprehensive CI/CD pipeline using GitHub Actions that au
 ### Required Secrets
 To use the CI/CD pipeline, set up the following GitHub secrets:
 - `GCP_SA_KEY`: Service account key with necessary permissions
-- `PROJECT_ID`: Your GCP project ID 
+- `PROJECT_ID`: Your GCP project ID
+
+## Latest Deployment
+Last tested: 2024-03-19 
