@@ -100,7 +100,7 @@ def transform_data(data: Dict) -> Dict:
     return transformed
 
 @functions_framework.http
-def validate_data(request: Request) -> Tuple[Dict, int]:
+def data_validator(request: Request) -> Tuple[Dict, int]:
     """
     Validate incoming event data and publish to Pub/Sub if valid.
     """
