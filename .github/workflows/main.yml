@@ -19,15 +19,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Install Snyk
-      uses: snyk/actions/setup@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    - name: Install Snyk CLI
+      run: |
+        npm install -g snyk
+        snyk config set api=${{ secrets.SNYK_TOKEN }}
+        snyk config set org=aashikmathew
 
     - name: Run Snyk to check for vulnerabilities
       run: |
         cd serverless-pipeline/src/functions/data_validator
-        snyk test --file=requirements.txt --severity-threshold=high --skip-unresolved --token=${{ secrets.SNYK_TOKEN }}
+        snyk monitor --project-id=cf6aec5e-868c-4fed-a5ac-0c6bb99e7d1a --file=requirements.txt --severity-threshold=high
 
     - name: Scan for secrets
       uses: gitleaks/gitleaks-action@v2
