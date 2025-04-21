@@ -11,7 +11,6 @@ env:
   PROJECT_ID: servless-pipeline
   REGION: us-central1
   PYTHON_VERSION: '3.9'
-  TF_VERSION: '1.5.7'
 
 jobs:
   deploy:
@@ -88,53 +87,13 @@ jobs:
           --timeout 60s \
           --allow-unauthenticated
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: ${{ env.TF_VERSION }}
-
-    - name: Terraform Init
-      run: |
-        cd serverless-pipeline/terraform
-        terraform init
-
-    - name: Terraform Format Check
-      run: |
-        cd serverless-pipeline/terraform
-        terraform fmt -check
-
-    - name: Terraform Validate
-      run: |
-        cd serverless-pipeline/terraform
-        terraform validate
-
-    - name: Terraform Plan
-      id: plan
-      run: |
-        cd serverless-pipeline/terraform
-        terraform plan -no-color -out=tfplan
-      continue-on-error: true
-
-    - name: Save Terraform Plan
-      uses: actions/upload-artifact@v4
-      with:
-        name: terraform-plan
-        path: serverless-pipeline/terraform/tfplan
-        retention-days: 5
-
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main'
-      run: |
-        cd serverless-pipeline/terraform
-        terraform apply -auto-approve tfplan
-
     # Only run Slack notification if SLACK_BOT_TOKEN is configured
     - name: Notify Deployment Status
       if: always() && github.ref == 'refs/heads/main' && env.SLACK_BOT_TOKEN != null
       uses: slackapi/slack-github-action@v1.25.0
       with:
-        # Replace CHANNEL_ID with your actual channel ID (e.g., C0123456789)
-        channel-id: 'C0123456789'
+        # Update this with your actual Slack channel ID
+        channel-id: 'C06QXQXR5QD'
         slack-message: |
           🚀 *Deployment Update*
           *Status:* ${{ job.status }}
