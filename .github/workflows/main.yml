@@ -19,25 +19,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r serverless-pipeline/src/functions/data_validator/requirements.txt
-        pip install -r serverless-pipeline/src/frontend/requirements.txt
-        pip install pytest pytest-cov flake8 mypy
-
-    - name: Security Scan
+    - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high --skip-unresolved
+        command: test
+        args: --file=serverless-pipeline/src/functions/data_validator/requirements.txt --severity-threshold=high
 
     - name: Scan for secrets
       uses: gitleaks/gitleaks-action@v2
