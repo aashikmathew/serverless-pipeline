@@ -54,3 +54,4 @@ application_default_credentials.json
 # Logs
 *.log
 logs/
+.qodo

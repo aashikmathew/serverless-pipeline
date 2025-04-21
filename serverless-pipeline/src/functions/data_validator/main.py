@@ -8,13 +8,8 @@ import functions_framework
 from flask import Request
 import os
 
-# Initialize Pub/Sub client only if not in test environment
-publisher = None
-if os.getenv('PYTEST_CURRENT_TEST') is None:
-    try:
-        publisher = pubsub_v1.PublisherClient()
-    except Exception:
-        print("Warning: Could not initialize Pub/Sub client. Running in offline mode.")
+# Initialize Pub/Sub client
+publisher = pubsub_v1.PublisherClient()
 
 # Rate limiting configuration
 RATE_LIMIT = 100  # requests per minute
@@ -25,6 +20,10 @@ def rate_limit(ip: str) -> bool:
     Implement rate limiting based on IP address.
     Returns True if rate limit is exceeded, False otherwise.
     """
+    # Skip rate limiting in test environment unless explicitly testing rate limiting
+    if os.getenv('PYTEST_CURRENT_TEST') and not os.getenv('TEST_RATE_LIMIT'):
+        return False
+        
     current_time = time.time()
     minute_window = current_time - 60
     
@@ -84,34 +83,20 @@ def validate_field(field_name: str, value: Any, rules: Dict) -> Optional[str]:
     return None
 
 def transform_data(data: Dict) -> Dict:
-    """
-    Transform and sanitize input data.
-    """
+    """Transform and normalize data fields."""
     transformed = data.copy()
     
-    # Transform email
+    # Transform email: strip whitespace and convert to lowercase
     if 'email' in transformed:
         transformed['email'] = transformed['email'].strip().lower()
-        
-    # Transform phone number (remove all non-digit characters)
+    
+    # Transform phone: remove all non-digit characters
     if 'phone' in transformed:
-        transformed['phone'] = re.sub(r'\D', '', transformed['phone'])
-        
-    # Transform timestamp to ISO format if it's not already
-    if 'timestamp' in transformed:
-        try:
-            # Try parsing as ISO format first
-            dt = datetime.fromisoformat(transformed['timestamp'].replace('Z', '+00:00'))
-            # If it's already in ISO format, just ensure it's in the correct format
-            transformed['timestamp'] = dt.strftime('%Y-%m-%dT%H:%M:%S')
-        except ValueError:
-            try:
-                # Try parsing as regular datetime and convert to ISO format
-                dt = datetime.strptime(transformed['timestamp'], '%Y-%m-%d %H:%M:%S')
-                transformed['timestamp'] = dt.strftime('%Y-%m-%dT%H:%M:%S')
-            except ValueError:
-                pass  # Leave original value if parsing fails
-            
+        transformed['phone'] = ''.join(filter(str.isdigit, transformed['phone']))
+    
+    # Keep timestamp as is if it's already in ISO format
+    # This assumes the validation step has already checked the format
+    
     return transformed
 
 @functions_framework.http
@@ -138,17 +123,20 @@ def validate_data(request: Request) -> Tuple[Dict, int]:
     except Exception:
         return {"error": "Invalid request: malformed JSON"}, 400
         
-    # Transform data before validation
-    transformed_data = transform_data(data)
-    
     # Validation rules
     rules = {
         'event_type': {'required': True, 'type': 'str'},
         'data': {'required': True},
         'email': {'required': True, 'type': 'str', 'pattern': r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'},
-        'phone': {'required': True, 'type': 'str', 'pattern': r'^\+?\d+$'},
+        'phone': {'required': True, 'type': 'str', 'pattern': r'^\+?[\d\s\-\(\)]+$'},
         'timestamp': {'required': True, 'type': 'str'}
     }
+    
+    # Transform data
+    try:
+        transformed_data = transform_data(data)
+    except ValueError as e:
+        return {"error": str(e)}, 400
     
     # Validate fields
     errors = []
@@ -166,55 +154,37 @@ def validate_data(request: Request) -> Tuple[Dict, int]:
                 errors.append(error)
                 continue
                 
+            # Special handling for timestamp format
+            if field == 'timestamp':
+                if not re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$', value):
+                    return {"error": "Invalid timestamp format"}, 400
+                continue
+                
             # Pattern validation for strings
             if isinstance(value, str) and 'pattern' in field_rules:
                 pattern = field_rules['pattern']
                 if not re.match(pattern, value):
                     errors.append(f"{field} format is invalid")
                     
-    # Validate timestamp format
-    if 'timestamp' in transformed_data:
-        try:
-            # Try parsing as ISO format
-            datetime.fromisoformat(transformed_data['timestamp'].replace('Z', '+00:00'))
-        except ValueError:
-            try:
-                # Try parsing as regular datetime
-                datetime.strptime(transformed_data['timestamp'], '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                errors.append("timestamp format is invalid")
-                    
     if errors:
         return {"errors": errors}, 400
-    
-    # Prepare message data
-    message_data = {
-        "data": transformed_data,
-        "metadata": {
-            "ip": client_ip,
-            "user_agent": request.headers.get('User-Agent'),
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    }
-    
-    # Skip publishing in test environment unless we're testing error handling
-    if os.getenv('PYTEST_CURRENT_TEST') is not None and os.getenv('TEST_PUBLISH_ERROR') is None:
-        # In test mode, simulate publishing
-        return {
-            "message": "Event validated successfully (test mode)",
-            "event_id": "test-event-id",
-            "data": message_data  # Include the transformed data for test verification
-        }, 200
-    
+        
     # Publish to Pub/Sub
     try:
-        if publisher is None:
-            raise Exception("Pub/Sub client not initialized")
-            
         topic_path = publisher.topic_path(
             request.environ.get("PROJECT_ID", "servless-pipeline"),
             "events-topic"
         )
+        
+        # Prepare message data
+        message_data = {
+            "data": transformed_data,
+            "metadata": {
+                "ip": client_ip,
+                "user_agent": request.headers.get('User-Agent'),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        }
         
         # Publish message
         future = publisher.publish(
