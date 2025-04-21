@@ -24,7 +24,7 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high
+        args: --severity-threshold=high --file=serverless-pipeline/src/functions/data_validator/requirements.txt
 
     - name: Scan for secrets
       uses: gitleaks/gitleaks-action@v2
