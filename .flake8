@@ -1,0 +1,23 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    *.egg-info,
+    venv,
+    env,
+    */werkzeug/*,
+    */wrapt/*,
+    */google/*,
+    */pyasn1_modules/*,
+    */rsa/*
+
+# Specific error codes to ignore
+ignore = F821, F824
+
+# Maximum line length
+max-line-length = 100
+
+# Maximum complexity
+max-complexity = 10 
