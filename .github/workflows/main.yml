@@ -1,7 +1,6 @@
-# Simple workflow for building and deploying the application
+# Complete workflow for building, testing, and deploying the application
 name: Build and Deploy
 
-# Test trigger comment
 on:
   push:
     branches: [ main ]
@@ -12,19 +11,22 @@ env:
   PROJECT_ID: servless-pipeline
   REGION: us-central1
   PYTHON_VERSION: '3.9'
-  TF_VERSION: '1.0.0'
+  TF_VERSION: '1.5.7'
 
 jobs:
   deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy-frontend.outputs.url }}
     permissions:
       contents: read
       id-token: write
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
@@ -34,12 +36,16 @@ jobs:
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
+      with:
+        version: 'latest'
+        install_components: 'gke-gcloud-auth-plugin'
 
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker gcr.io
 
     # Build and Push Docker image
     - name: Build and Push Frontend Image
+      id: docker-build
       run: |
         cd serverless-pipeline/src/frontend
         docker build --platform linux/amd64 \
@@ -50,6 +56,7 @@ jobs:
 
     # Deploy to Cloud Run (only on main branch)
     - name: Deploy to Cloud Run
+      id: deploy-frontend
       if: github.ref == 'refs/heads/main'
       run: |
         gcloud run deploy frontend-service \
@@ -72,7 +79,7 @@ jobs:
           --allow-unauthenticated
 
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
+      uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: ${{ env.TF_VERSION }}
 
@@ -98,20 +105,22 @@ jobs:
         terraform plan -no-color -out=tfplan
       continue-on-error: true
 
-    - name: Upload Terraform Plan
-      uses: actions/upload-artifact@v3
+    - name: Save Terraform Plan
+      uses: actions/upload-artifact@v4
       with:
         name: terraform-plan
         path: serverless-pipeline/terraform/tfplan
+        retention-days: 5
 
     - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
       run: |
         cd serverless-pipeline/terraform
         terraform apply -auto-approve tfplan
 
     - name: Notify Deployment Status
       if: always()
-      uses: slackapi/slack-github-action@v1.24.0
+      uses: slackapi/slack-github-action@v1.25.0
       with:
         channel-id: 'deployments'
         slack-message: |
