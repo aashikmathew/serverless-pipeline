@@ -69,7 +69,7 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
     condition_threshold {
       filter          = "metric.type=\"run.googleapis.com/request_count\" resource.type=\"cloud_run_revision\" resource.label.\"service_name\"=\"${var.cloud_run_service_name}\" metric.label.\"response_code_class\"=\"5xx\""
       duration        = "300s"
-      comparison     = "COMPARISON_GT"
+      comparison      = "COMPARISON_GT"
       threshold_value = 5.0
 
       aggregations {
@@ -92,7 +92,7 @@ resource "google_monitoring_alert_policy" "function_timeout" {
     condition_threshold {
       filter          = "metric.type=\"cloudfunctions.googleapis.com/function/execution_times\" resource.type=\"cloud_function\" resource.label.\"function_name\"=\"data-validator\""
       duration        = "300s"
-      comparison     = "COMPARISON_GT"
+      comparison      = "COMPARISON_GT"
       threshold_value = 30000 # 30 seconds
 
       aggregations {
