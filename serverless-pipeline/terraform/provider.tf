@@ -7,9 +7,8 @@ terraform {
     }
   }
 
-  backend "gcs" {
-    bucket = "servless-pipeline-tfstate"
-    prefix = "terraform/state"
+  backend "local" {
+    path = "terraform.tfstate"
   }
 }
 
