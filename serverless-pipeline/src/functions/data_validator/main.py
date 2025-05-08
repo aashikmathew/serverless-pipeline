@@ -7,29 +7,38 @@ from google.cloud import pubsub_v1
 import functions_framework
 from flask import Request
 import os
+from functools import lru_cache
 
-# Initialize Pub/Sub client
+# Initialize Pub/Sub client with timeout
 publisher = pubsub_v1.PublisherClient()
+PUBSUB_TIMEOUT = 10  # seconds
 
 # Rate limiting configuration
 RATE_LIMIT = 100  # requests per minute
+RATE_LIMIT_WINDOW = 60  # seconds
 rate_limit_dict = {}
+
+def cleanup_old_entries():
+    """Clean up entries older than the rate limit window."""
+    current_time = time.time()
+    for ip in list(rate_limit_dict.keys()):
+        rate_limit_dict[ip] = [t for t in rate_limit_dict[ip] if t > current_time - RATE_LIMIT_WINDOW]
+        if not rate_limit_dict[ip]:
+            del rate_limit_dict[ip]
 
 def rate_limit(ip: str) -> bool:
     """
     Implement rate limiting based on IP address.
     Returns True if rate limit is exceeded, False otherwise.
     """
-    # Skip rate limiting in test environment unless explicitly testing rate limiting
     if os.getenv('PYTEST_CURRENT_TEST') and not os.getenv('TEST_RATE_LIMIT'):
         return False
         
     current_time = time.time()
-    minute_window = current_time - 60
     
-    # Clean up old entries
-    if ip in rate_limit_dict:
-        rate_limit_dict[ip] = [t for t in rate_limit_dict[ip] if t > minute_window]
+    # Clean up old entries periodically
+    if len(rate_limit_dict) > 1000:  # Cleanup when dictionary gets too large
+        cleanup_old_entries()
     
     # Get request count for this IP
     requests = len(rate_limit_dict.get(ip, []))
@@ -43,6 +52,11 @@ def rate_limit(ip: str) -> bool:
     rate_limit_dict[ip].append(current_time)
     
     return False
+
+@lru_cache(maxsize=1000)
+def compile_regex(pattern: str) -> re.Pattern:
+    """Compile and cache regex patterns."""
+    return re.compile(pattern)
 
 def validate_field(field_name: str, value: Any, rules: Dict) -> Optional[str]:
     """
@@ -94,9 +108,6 @@ def transform_data(data: Dict) -> Dict:
     if 'phone' in transformed:
         transformed['phone'] = ''.join(filter(str.isdigit, transformed['phone']))
     
-    # Keep timestamp as is if it's already in ISO format
-    # This assumes the validation step has already checked the format
-    
     return transformed
 
 @functions_framework.http
@@ -104,6 +115,8 @@ def data_validator(request: Request) -> Tuple[Dict, int]:
     """
     Validate incoming event data and publish to Pub/Sub if valid.
     """
+    start_time = time.time()
+    
     # Handle health check endpoint
     if request.method == 'GET' and getattr(request, 'path', '') == '/health':
         return {'status': 'healthy'}, 200
@@ -156,20 +169,20 @@ def data_validator(request: Request) -> Tuple[Dict, int]:
                 
             # Special handling for timestamp format
             if field == 'timestamp':
-                if not re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$', value):
+                if not compile_regex(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$').match(value):
                     return {"error": "Invalid timestamp format"}, 400
                 continue
                 
             # Pattern validation for strings
             if isinstance(value, str) and 'pattern' in field_rules:
                 pattern = field_rules['pattern']
-                if not re.match(pattern, value):
+                if not compile_regex(pattern).match(value):
                     errors.append(f"{field} format is invalid")
                     
     if errors:
         return {"errors": errors}, 400
         
-    # Publish to Pub/Sub
+    # Publish to Pub/Sub with timeout
     try:
         topic_path = publisher.topic_path(
             request.environ.get("PROJECT_ID", "servless-pipeline"),
@@ -186,12 +199,20 @@ def data_validator(request: Request) -> Tuple[Dict, int]:
             }
         }
         
-        # Publish message
+        # Publish message with timeout
         future = publisher.publish(
             topic_path,
             json.dumps(message_data).encode('utf-8')
         )
-        event_id = future.result()
+        
+        try:
+            event_id = future.result(timeout=PUBSUB_TIMEOUT)
+        except Exception as e:
+            return {"error": f"Failed to publish message: {str(e)}"}, 500
+        
+        execution_time = time.time() - start_time
+        if execution_time > 20:  # Log warning if execution time exceeds 20 seconds
+            print(f"Warning: Long execution time: {execution_time:.2f} seconds")
         
         return {
             "message": "Event validated and published successfully",
