@@ -3,11 +3,38 @@
     --success-color: #34a853;
     --error-color: #ea4335;
     --background-color: #f8f9fa;
+    --card-bg: #fff;
+    --text-color: #222;
+    --input-bg: #fff;
+    --input-border: #ddd;
+    --footer-bg: #f8fafc;
+    --footer-border: #e5e7eb;
+    --footer-text: #6c757d;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+    --primary-color: #8ab4f8;
+    --success-color: #34f58a;
+    --error-color: #f58a8a;
+    --background-color: #181a1b;
+    --card-bg: #23272b;
+    --text-color: #f1f3f4;
+    --input-bg: #23272b;
+    --input-border: #444;
+    --footer-bg: #181a1b;
+    --footer-border: #23272b;
+    --footer-text: #b0b3b8;
+    --shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: var(--background-color);
+    background: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     margin: 0;
     padding: 20px;
 }
@@ -16,9 +43,10 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
-    background-color: white;
+    background-color: var(--card-bg);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
+    flex: 1 0 auto;
 }
 
 .header {
@@ -36,7 +64,9 @@ body {
 }
 
 .form-control {
-    border: 1px solid #ddd;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-color);
     border-radius: 4px;
     padding: 10px;
     width: 100%;
@@ -50,7 +80,7 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background: linear-gradient(90deg, #6366f1 0%, #3b82f6 100%);
     border: none;
     padding: 12px 24px;
     border-radius: 4px;
@@ -59,8 +89,13 @@ body {
     transition: background-color 0.3s ease;
 }
 
+[data-theme='dark'] .btn-primary {
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+    color: #fff;
+}
+
 .btn-primary:hover {
-    background-color: #3367d6;
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
 }
 
 .result {
@@ -71,15 +106,31 @@ body {
 }
 
 .result.success {
-    background-color: #d4edda;
-    border: 1px solid var(--success-color);
-    color: #155724;
+    color: #16a34a;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+[data-theme='dark'] .result.success {
+    color: #34f58a;
+    background: #1e3a2f;
+    border: 1px solid #34f58a;
 }
 
 .result.error {
-    background-color: #f8d7da;
-    border: 1px solid var(--error-color);
-    color: #721c24;
+    color: #dc2626;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+[data-theme='dark'] .result.error {
+    color: #f58a8a;
+    background: #3a1e1e;
+    border: 1px solid #f58a8a;
 }
 
 .loading {
@@ -110,4 +161,87 @@ body {
     .btn-primary {
         width: 100%;
     }
+}
+
+.footer {
+    flex-shrink: 0;
+    background: var(--footer-bg, #f8fafc);
+    border-top: 1px solid var(--footer-border, #e5e7eb);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+}
+
+.footer-content {
+    width: 100%;
+}
+
+.footer-text {
+    color: #222;
+    font-weight: 500;
+}
+
+[data-theme='dark'] .footer {
+    background: #23272b;
+    border-top: 1px solid #181a1b;
+}
+
+[data-theme='dark'] .footer-text {
+    color: #fff;
+}
+
+.card {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.theme-switch-wrapper {
+    z-index: 10;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 34px;
+    position: relative;
+    width: 60px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #ccc;
+    border-radius: 34px;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+}
+
+.slider:before {
+    background-color: #fff;
+    border-radius: 50%;
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 26px;
+}
+
+input:checked + .slider {
+    background-color: #4285f4;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider {
+    box-shadow: 0 0 2px #222;
 } 

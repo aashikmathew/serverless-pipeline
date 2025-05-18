@@ -55,3 +55,47 @@ application_default_credentials.json
 *.log
 logs/
 .qodo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# System Files
+Thumbs.db
+Desktop.ini
+
+# Python bytecode
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Coverage
+.coverage*
+.cache/
+
+# Misc
+*.bak
+*.tmp
+*.orig
+
+# Cloud Build
+cloudbuild.yaml
+
+# Zip archives
+*.zip
+
+# Serverless/Build Artifacts
+*.tar.gz
+*.tar
+*.gz
+
+# Ignore backup files
+*~
