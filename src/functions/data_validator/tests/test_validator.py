@@ -2,7 +2,7 @@ import sys
 from unittest.mock import MagicMock
 sys.modules['google.cloud.pubsub_v1'] = MagicMock()
 
-from main import validate_data, rate_limit, validate_field, transform_data
+from main import validate_data
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 import json
