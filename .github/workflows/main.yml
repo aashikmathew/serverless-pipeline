@@ -88,6 +88,11 @@ jobs:
           --timeout 60s \
           --allow-unauthenticated
 
+    - name: Zip Cloud Function source
+      run: |
+        cd serverless-pipeline/src/functions/data_validator
+        zip -r function-source.zip .
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
