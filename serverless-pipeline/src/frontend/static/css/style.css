@@ -110,4 +110,120 @@ body {
     .btn-primary {
         width: 100%;
     }
+}
+
+/* Dark/Light mode styles */
+[data-theme="dark"] {
+    --primary-color: #8ab4f8;
+    --success-color: #34a853;
+    --error-color: #ea4335;
+    --background-color: #181a1b;
+    background-color: #181a1b;
+    color: #e8eaed;
+}
+[data-theme="dark"] .container {
+    background-color: #23272f;
+    color: #e8eaed;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .card {
+    background-color: #23272f;
+    color: #e8eaed;
+}
+[data-theme="dark"] .form-control {
+    background-color: #23272f;
+    color: #e8eaed;
+    border-color: #444;
+}
+[data-theme="dark"] .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.2);
+}
+[data-theme="dark"] .btn-primary {
+    background-color: #8ab4f8;
+    color: #23272f;
+}
+[data-theme="dark"] .btn-primary:hover {
+    background-color: #5a8dee;
+}
+[data-theme="dark"] .result.success {
+    background-color: #1e2b1e;
+    border-color: #34a853;
+    color: #b9f6ca;
+}
+[data-theme="dark"] .result.error {
+    background-color: #2d1e1e;
+    border-color: #ea4335;
+    color: #ffbdbd;
+}
+[data-theme="dark"] .footer {
+    background-color: #23272f;
+    color: #e8eaed;
+    border-top: 1px solid #444;
+}
+
+/* Theme switch styles */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+}
+.theme-switch {
+    display: inline-block;
+    height: 24px;
+    position: relative;
+    width: 48px;
+}
+.theme-switch input {
+    display: none;
+}
+.slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+    border-radius: 24px;
+}
+.slider:before {
+    background-color: #fff;
+    border-radius: 50%;
+    bottom: 4px;
+    content: "";
+    height: 16px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 16px;
+}
+.theme-switch input:checked + .slider {
+    background-color: #4285f4;
+}
+.theme-switch input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+/* Footer styles */
+.footer {
+    background-color: #fff;
+    color: #888;
+    text-align: center;
+    font-size: 1rem;
+    box-shadow: 0 -1px 4px rgba(0,0,0,0.04);
+}
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-text {
+    font-size: 1rem;
+}
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 } 

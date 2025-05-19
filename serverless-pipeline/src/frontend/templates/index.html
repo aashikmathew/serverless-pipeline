@@ -9,44 +9,51 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Data Validator</h1>
-            <p class="text-muted">Enter your information for validation</p>
+    <div class="container py-5">
+        <div class="header text-center mb-4 position-relative">
+            <h1 class="display-4 fw-bold d-inline-block align-middle">Data Validator</h1>
+            <div class="theme-switch-wrapper position-absolute top-0 end-0 mt-2 me-2">
+                <label class="theme-switch" for="theme-toggle">
+                    <input type="checkbox" id="theme-toggle" aria-label="Toggle dark mode">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <p class="lead text-muted">Enter your information for validation</p>
         </div>
-
-        <form id="validationForm" onsubmit="return validateData(event)">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" class="form-control" id="name" name="name" required
-                       pattern="[A-Za-z\s]+" title="Please enter a valid name (letters and spaces only)">
-                <div class="invalid-feedback">Please enter a valid name.</div>
+        <div class="card shadow-lg p-4 mb-5 bg-body rounded">
+            <form id="validationForm" onsubmit="return validateData(event)">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required pattern="[A-Za-z\s]+" title="Please enter a valid name (letters and spaces only)">
+                    <div class="invalid-feedback">Please enter a valid name.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                    <div class="invalid-feedback">Please enter a valid email address.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="age" class="form-label">Age</label>
+                    <input type="number" class="form-control" id="age" name="age" required min="0" max="150" step="1">
+                    <div class="invalid-feedback">Please enter a valid age (0-150).</div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Validate Data</button>
+            </form>
+            <div class="loading text-center mt-4" style="display:none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Validating data...</p>
             </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-                <div class="invalid-feedback">Please enter a valid email address.</div>
-            </div>
-
-            <div class="form-group">
-                <label for="age">Age</label>
-                <input type="number" class="form-control" id="age" name="age" required
-                       min="0" max="150" step="1">
-                <div class="invalid-feedback">Please enter a valid age (0-150).</div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Validate Data</button>
-        </form>
-
-        <div class="loading">
-            <div class="loading-spinner"></div>
-            <p>Validating data...</p>
+            <div id="result" class="result mt-4" style="display:none;"></div>
         </div>
-
-        <div id="result" class="result"></div>
     </div>
-
+    <footer class="footer mt-auto py-3 border-top shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center footer-content">
+            <span class="footer-text">Made with <span style="color: #e25555;">&#10084;&#65039;</span> by Aashik + GCP</span>
+            <span class="footer-text small">&copy; 2025</span>
+        </div>
+    </footer>
     <script>
         async function validateData(event) {
             event.preventDefault();
@@ -105,6 +112,24 @@
                 }
             });
         });
+
+        // Theme toggle logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeToggle.checked = theme === 'dark';
+        }
+        themeToggle.addEventListener('change', function() {
+            setTheme(this.checked ? 'dark' : 'light');
+        });
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            setTheme(prefersDark ? 'dark' : 'light');
+        }
     </script>
 </body>
 </html> 
