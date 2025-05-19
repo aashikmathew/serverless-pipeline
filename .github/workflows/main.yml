@@ -66,11 +66,13 @@ jobs:
       id: deploy-frontend
       if: github.ref == 'refs/heads/main'
       run: |
-        gcloud run deploy frontend-service \
+        SERVICE_URL=$(gcloud run deploy frontend-service \
           --image gcr.io/$PROJECT_ID/frontend-service:${{ github.sha }} \
           --platform managed \
           --region $REGION \
-          --allow-unauthenticated
+          --allow-unauthenticated \
+          --format='value(status.url)')
+        echo "url=$SERVICE_URL" >> $GITHUB_OUTPUT
 
     # Deploy Cloud Function (only on main branch)
     - name: Deploy Cloud Function
