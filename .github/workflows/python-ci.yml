@@ -32,7 +32,10 @@ jobs:
           pip install flake8
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
 
-      - name: Run tests (if any)
+      - name: Run frontend tests (if any)
         run: |
-          if [ -f src/frontend/tests/test_app.py ]; then python -m unittest discover src/frontend/tests; fi
-          if [ -d src/functions/data_validator/tests ]; then python -m unittest discover src/functions/data_validator/tests; fi 
+          if [ -d src/frontend/tests ]; then cd src/frontend && PYTHONPATH=. python -m unittest discover tests; fi
+
+      - name: Run backend tests (if any)
+        run: |
+          if [ -d src/functions/data_validator/tests ]; then cd src/functions/data_validator && PYTHONPATH=. python -m unittest discover tests; fi 
