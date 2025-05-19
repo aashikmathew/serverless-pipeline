@@ -1,0 +1,38 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/frontend/requirements.txt || true
+          pip install -r src/functions/data_validator/requirements.txt || true
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+
+      - name: Run tests (if any)
+        run: |
+          if [ -f src/frontend/tests/test_app.py ]; then python -m unittest discover src/frontend/tests; fi
+          if [ -d src/functions/data_validator/tests ]; then python -m unittest discover src/functions/data_validator/tests; fi 
