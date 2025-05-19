@@ -1,4 +1,4 @@
-# Complete workflow for building, testing, and deploying the application
+# Complete workflow for building, testing, and deploying the application on cloud run
 name: Build and Deploy
 
 on:
@@ -101,7 +101,7 @@ jobs:
     - name: Terraform Format Check
       run: |
         cd serverless-pipeline/terraform
-        terraform fmt -check
+        terraform fmt -recursive
 
     - name: Terraform Validate
       run: |
