@@ -96,7 +96,8 @@ jobs:
     - name: Terraform Init
       run: |
         cd serverless-pipeline/terraform
-        terraform init
+        terraform init -backend-config="bucket=${{ env.PROJECT_ID }}-tf-state" \
+                      -backend-config="prefix=terraform/state"
 
     - name: Terraform Format Check
       run: |
@@ -112,8 +113,10 @@ jobs:
       id: plan
       run: |
         cd serverless-pipeline/terraform
-        terraform plan -no-color -out=tfplan
-      continue-on-error: true
+        terraform plan -no-color -out=tfplan \
+          -var="project_id=${{ env.PROJECT_ID }}" \
+          -var="region=${{ env.REGION }}" \
+          -var="environment=dev"
 
     - name: Save Terraform Plan
       uses: actions/upload-artifact@v4
