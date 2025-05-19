@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "The GCP project ID"
   type        = string
-  default     = "servless-pipeline"
+  default     = "serverless-pipeline"
 }
 
 variable "cloud_run_service_name" {
