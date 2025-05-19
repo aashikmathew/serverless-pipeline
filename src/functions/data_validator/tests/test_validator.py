@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 import json
-from src.functions.data_validator.main import validate_data, rate_limit, validate_field, transform_data
+from main import validate_data, rate_limit, validate_field, transform_data
 import time
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def mock_request():
 @pytest.fixture
 def mock_publisher():
     """Create a mock publisher client."""
-    with patch('src.functions.data_validator.main.publisher') as mock:
+    with patch('main.publisher') as mock:
         mock.topic_path.return_value = "projects/servless-pipeline/topics/events-topic"
         yield mock
 
@@ -35,7 +35,7 @@ def valid_data():
 def test_valid_request(mock_request, valid_data):
     mock_request.get_json.return_value = valid_data
     
-    with patch('src.functions.data_validator.main.publisher.publish') as mock_publish:
+    with patch('main.publisher.publish') as mock_publish:
         mock_future = MagicMock()
         mock_publish.return_value = mock_future
         mock_future.result.return_value = 'message-id'
@@ -104,7 +104,7 @@ def test_data_transformation(mock_request, valid_data):
     valid_data['phone'] = '+1 (234) 567-890'
     mock_request.get_json.return_value = valid_data
     
-    with patch('src.functions.data_validator.main.publisher.publish') as mock_publish:
+    with patch('main.publisher.publish') as mock_publish:
         mock_future = MagicMock()
         mock_publish.return_value = mock_future
         mock_future.result.return_value = 'message-id'
