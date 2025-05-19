@@ -47,7 +47,11 @@ def validate_data(data):
             headers={'Content-Type': 'application/json'},
             timeout=10
         )
-        return response.json(), response.status_code
+        try:
+            return response.json(), response.status_code
+        except Exception:
+            # If response is not JSON, return the raw text
+            return {'error': f'Non-JSON response from Cloud Function: {response.text}'}, response.status_code
     except requests.exceptions.RequestException as req_error:
         return {'error': str(req_error)}, 500
 
@@ -92,13 +96,13 @@ def validate():
 
         # Call the validation function
         result, status_code = validate_data(data)
+        # Log the result for debugging
+        app.logger.info(f"Validation result: {result}, status: {status_code}")
         return jsonify(result), status_code
 
-    except json.JSONDecodeError:
-        return jsonify({'error': 'Invalid JSON data'}), 400
     except Exception as error:
         app.logger.error('Error processing request: %s', str(error))
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'error': f'Internal server error: {str(error)}'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080))) 
