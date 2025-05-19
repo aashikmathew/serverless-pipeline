@@ -13,7 +13,7 @@ variable "cloud_run_service_name" {
 variable "alert_email_address" {
   description = "Email address to receive monitoring alerts"
   type        = string
-  default     = "aashikmathewss@gmail.com"  # You can change this default value
+  default     = "aashikmathewss@gmail.com" # You can change this default value
 }
 
 variable "environment" {
