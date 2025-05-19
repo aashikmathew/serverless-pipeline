@@ -125,11 +125,9 @@ def data_validator(request: Request) -> Tuple[Dict, int]:
         
     # Validation rules
     rules = {
-        'event_type': {'required': True, 'type': 'str'},
-        'data': {'required': True},
-        'email': {'required': True, 'type': 'str', 'pattern': r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'},
-        'phone': {'required': True, 'type': 'str', 'pattern': r'^\+?[\d\s\-\(\)]+$'},
-        'timestamp': {'required': True, 'type': 'str'}
+        'name': {'required': True, 'type': 'str', 'min_length': 1},
+        'email': {'required': True, 'type': 'str', 'pattern': r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'},
+        'age': {'required': True, 'type': 'int', 'min': 0}
     }
     
     # Transform data
@@ -144,28 +142,20 @@ def data_validator(request: Request) -> Tuple[Dict, int]:
         if field_rules.get('required', False) and field not in transformed_data:
             errors.append(f"{field} is required")
             continue
-            
+        
         if field in transformed_data:
             value = transformed_data[field]
-            
             # Basic field validation
             error = validate_field(field, value, rules)
             if error:
                 errors.append(error)
                 continue
-                
-            # Special handling for timestamp format
-            if field == 'timestamp':
-                if not re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$', value):
-                    return {"error": "Invalid timestamp format"}, 400
-                continue
-                
             # Pattern validation for strings
             if isinstance(value, str) and 'pattern' in field_rules:
                 pattern = field_rules['pattern']
                 if not re.match(pattern, value):
                     errors.append(f"{field} format is invalid")
-                    
+    
     if errors:
         return {"errors": errors}, 400
         
