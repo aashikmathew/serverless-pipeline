@@ -1,21 +1,5 @@
 # Enable required APIs
-resource "google_project_service" "required_apis" {
-  for_each = toset([
-    "cloudfunctions.googleapis.com",
-    "cloudrun.googleapis.com",
-    "cloudbuild.googleapis.com",
-    "cloudresourcemanager.googleapis.com",
-    "iam.googleapis.com",
-    "monitoring.googleapis.com",
-    "logging.googleapis.com"
-  ])
-
-  project = var.project_id
-  service = each.key
-
-  disable_dependent_services = false
-  disable_on_destroy         = false
-}
+# (Removed google_project_service.required_apis resource)
 
 # Create Cloud Run service
 resource "google_cloud_run_service" "frontend" {
@@ -36,7 +20,7 @@ resource "google_cloud_run_service" "frontend" {
     latest_revision = true
   }
 
-  depends_on = [google_project_service.required_apis]
+  # depends_on = [google_project_service.required_apis] (removed)
 }
 
 # Create Cloud Function
@@ -53,7 +37,7 @@ resource "google_cloudfunctions_function" "data_validator" {
   trigger_http          = true
   entry_point           = "data_validator"
 
-  depends_on = [google_project_service.required_apis]
+  # depends_on = [google_project_service.required_apis] (removed)
 }
 
 # Create storage bucket for function code
@@ -64,7 +48,7 @@ resource "google_storage_bucket" "function_bucket" {
   storage_class               = var.storage_class
   uniform_bucket_level_access = true
 
-  depends_on = [google_project_service.required_apis]
+  # depends_on = [google_project_service.required_apis] (removed)
 }
 
 # Upload function code
