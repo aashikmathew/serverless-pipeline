@@ -126,7 +126,7 @@ def data_validator(request: Request) -> Tuple[Dict, int]:
     # Validation rules
     rules = {
         'name': {'required': True, 'type': 'str', 'min_length': 1},
-        'email': {'required': True, 'type': 'str', 'pattern': r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'},
+        'email': {'required': True, 'type': 'str', 'pattern': r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'},
         'age': {'required': True, 'type': 'int', 'min': 0}
     }
     
