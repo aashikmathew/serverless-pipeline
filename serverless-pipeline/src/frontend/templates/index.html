@@ -84,7 +84,8 @@
                     resultDiv.innerHTML = '<strong>Success!</strong> Data validated successfully.';
                 } else {
                     resultDiv.className = 'result error';
-                    resultDiv.innerHTML = `<strong>Error!</strong> ${data.error}`;
+                    let errorMsg = data.error || (data.errors ? data.errors.join('<br>') : 'Unknown error');
+                    resultDiv.innerHTML = `<strong>Error!</strong> ${errorMsg}`;
                 }
                 
                 resultDiv.style.display = 'block';
